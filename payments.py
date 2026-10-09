@@ -20,6 +20,8 @@
 
 """Recharge logic: Auto UPI (UTR verification API), manual approval, single-use UTR protection."""
 import re
+import ssl
+import certifi
 import aiohttp
 from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
@@ -65,7 +67,7 @@ async def utr_lookup(utr, amount):
     params = {"mail": s.get("UTR_API_MAIL", ""), "apppass": s.get("UTR_API_PASS", ""), "amount": amount}
     params["txnid" if utr.startswith("FMP") else "utr"] = utr
     try:
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=25)) as sess:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=25), connector=aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=certifi.where()))) as sess:
             async with sess.get(s.get("UTR_API_URL") or "https://subdict.qzz.io/check", params=params) as resp:
                 res = await resp.json(content_type=None)
     except Exception as e:

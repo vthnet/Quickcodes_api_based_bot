@@ -21,7 +21,9 @@
 """Quick Codes API client + friendly error handling."""
 import asyncio
 from html import escape
+import ssl
 import aiohttp
+import certifi
 from config import QC_API_BASE
 from db import get_settings
 import notify
@@ -33,7 +35,9 @@ BUSY_USER = "⚠️ <b>Service temporarily unavailable.</b>\nPlease try again la
 async def _sess():
     global _session
     if _session is None or _session.closed:
-        _session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=40))
+        _session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=40),
+            connector=aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=certifi.where()), limit=30, ttl_dns_cache=300))
     return _session
 
 

@@ -18,6 +18,8 @@
 # Powered by VTH NETWORK | @vthchannel
 # ============================================================================
 
+import ssl
+import certifi
 import aiohttp
 from config import QC_API_URL
 from db import api_logs
@@ -42,7 +44,7 @@ async def request(server, method, path, *, params=None, json=None):
         raise QCError(503, f'QuickCodes {server} API key is not configured')
     url = QC_API_URL + path
     timeout = aiohttp.ClientTimeout(total=65)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with aiohttp.ClientSession(timeout=timeout, connector=aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=certifi.where()))) as session:
         try:
             async with session.request(method, url, headers=headers(server), params=params, json=json) as r:
                 data = await r.json(content_type=None)
